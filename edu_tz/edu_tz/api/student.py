@@ -8,6 +8,11 @@ def after_insert(doc, method):
     create_customer(doc)
 
 
+def validate(doc, method):
+    if not doc.customer:
+        doc.customer = create_customer(doc)
+
+
 def create_customer(doc):
     customer = frappe.get_doc(
         {
@@ -28,3 +33,4 @@ def create_customer(doc):
 
     frappe.db.set_value("Student", doc.name, "customer", customer.name)
     frappe.msgprint(_("Customer {0} is created.").format(customer.name), alert=True)
+    return customer.name
