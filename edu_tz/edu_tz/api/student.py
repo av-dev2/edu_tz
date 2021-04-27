@@ -9,7 +9,7 @@ def after_insert(doc, method):
 
 
 def validate(doc, method):
-    if not doc.customer:
+    if not doc.customer and not doc.is_new():
         doc.customer = create_customer(doc)
 
 
