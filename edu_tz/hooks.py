@@ -96,6 +96,10 @@ doc_events = {
         "after_insert": "edu_tz.edu_tz.api.student.after_insert",
         "validate": "edu_tz.edu_tz.api.student.validate",
     },
+    "Payment Entry": {
+        "on_submit": "edu_tz.edu_tz.api.payment.on_submit",
+        # "validate": "edu_tz.edu_tz.api.payment.on_submit",
+    },
 }
 
 # Scheduled Tasks
@@ -176,6 +180,9 @@ fixtures = [
                 (
                     "Customer-student",
                     "Student-customer",
+                    "Fees-sales_invoice_income_account",
+                    "Sales Invoice-payment_entry",
+                    "Sales Invoice-fees",
                 ),
             ]
         ],
