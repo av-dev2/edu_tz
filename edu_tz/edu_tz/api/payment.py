@@ -29,6 +29,7 @@ def create_sales_invoice(doc):
         sales_invoice.fees = fees_doc.name
         sales_invoice.payment_entry = doc.name
         sales_invoice.cost_center = cost_center
+        sales_invoice.is_pos = 0
 
         sales_invoice.append(
             "items",
