@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from frappe.utils import getdate
-from csf_tz import console
 
 
 def on_submit(doc, method):
@@ -21,7 +20,7 @@ def create_sales_invoice(doc):
         customer = frappe.get_value("Student", doc.party, "customer")
         if not customer:
             frappe.throw(_("Please set Customer in Student record"))
-
+        cost_center = frappe.get_value("Company", doc.company, "cost_center")
         sales_invoice = frappe.new_doc("Sales Invoice")
         sales_invoice.customer = customer
         sales_invoice.remarks = "Payment Entry: " + doc.name
@@ -29,6 +28,7 @@ def create_sales_invoice(doc):
         sales_invoice.company = doc.company
         sales_invoice.fees = fees_doc.name
         sales_invoice.payment_entry = doc.name
+        sales_invoice.cost_center = cost_center
 
         sales_invoice.append(
             "items",
@@ -41,13 +41,14 @@ def create_sales_invoice(doc):
                 "conversion_factor": 1,
                 "rate": doc.paid_amount,
                 "amount": doc.paid_amount,
+                "cost_center": cost_center,
+                "income_account": income_account,
             },
         )
 
         sales_invoice.flags.ignore_permissions = True
         frappe.flags.ignore_account_permission = True
         sales_invoice.set_missing_values()
-        console(sales_invoice)
         sales_invoice.save(ignore_permissions=True)
         frappe.msgprint(
             _("Draft Sales Invoice created {0}").format(sales_invoice.name), alert=True
