@@ -98,7 +98,9 @@ doc_events = {
     },
     "Payment Entry": {
         "on_submit": "edu_tz.edu_tz.api.payment.on_submit",
-        # "validate": "edu_tz.edu_tz.api.payment.on_submit",
+    },
+    "Sales Invoice": {
+        "on_submit": "edu_tz.edu_tz.api.sales_invoice.on_submit",
     },
 }
 
