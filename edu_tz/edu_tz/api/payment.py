@@ -34,7 +34,7 @@ def create_sales_invoice(doc):
         sales_invoice.append(
             "items",
             {
-                # "item_code": item_code,
+                "item_code": item_name,
                 "item_name": item_name,
                 "description": item_name,
                 "qty": 1,
