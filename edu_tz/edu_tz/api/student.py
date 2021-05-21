@@ -5,11 +5,13 @@ from erpnext import get_default_currency
 
 
 def after_insert(doc, method):
+    frappe.msgprint(_("Inserting customer"), alert=True)
     create_customer(doc)
 
 
 def validate(doc, method):
     if not doc.customer and not doc.is_new():
+        frappe.msgprint(_("Creating customer on validate"), alert=True)
         doc.customer = create_customer(doc)
 
 
