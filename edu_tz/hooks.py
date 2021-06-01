@@ -195,7 +195,20 @@ fixtures = [
             [
                 "name",
                 "in",
-                (),
+                (
+                    "Fee Structure-search_fields",
+                    "Fee Structure-title_field",
+                    "Fees-letter_head-fetch_from",
+                    "Fees-main-track_changes",
+                    "Guardian-naming_series-default",
+                    "Guardian-students-read_only",
+                    "Program Enrollment-enrolled_courses-collapsible",
+                    "Program Enrollment-section_break_7-collapsible",
+                    "Program Fee-due_date-columns",
+                    "Program Fee-student_category-columns",
+                    "Program Fee-student_category-fetch_from",
+                    "Program-program_fee-allow_bulk_edit",
+                ),
             ]
         ],
     },
