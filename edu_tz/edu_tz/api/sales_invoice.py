@@ -14,7 +14,7 @@ def create_journal_entry(doc):
     if not doc.fees:
         return
     amount = doc.base_net_total
-    debit_account = frappe.get_value("Fees", doc.fees, "income_account")
+    debit_account = frappe.get_value("Fees", doc.fees, "sales_invoice_income_account")
     party_account = get_party_account("Customer", doc.customer, doc.company)
 
     jl_rows = []
