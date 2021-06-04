@@ -183,6 +183,7 @@ fixtures = [
                     "Customer-student",
                     "Student-customer",
                     "Fees-sales_invoice_income_account",
+                    "Fee Structure-sales_invoice_income_account",
                     "Sales Invoice-payment_entry",
                     "Sales Invoice-fees",
                 ),
