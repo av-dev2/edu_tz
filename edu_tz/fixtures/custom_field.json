@@ -118,7 +118,7 @@
   "docstatus": 0,
   "doctype": "Custom Field",
   "dt": "Fees",
-  "fetch_from": fee_structure.sales_invoice_income_account,
+  "fetch_from": "fee_structure.sales_invoice_income_account",
   "fetch_if_empty": 1,
   "fieldname": "sales_invoice_income_account",
   "fieldtype": "Link",
