@@ -15,7 +15,7 @@ def create_sales_invoice(doc):
         and doc.references[0].reference_doctype == "Fees"
     ):
         fees_doc = frappe.get_doc("Fees", doc.references[0].reference_name)
-        item_name = fees_doc.components[0].description
+        item_name = fees_doc.components[0].fees_category
         income_account = fees_doc.sales_invoice_income_account
         customer = frappe.get_value("Student", doc.party, "customer")
         if not customer:
