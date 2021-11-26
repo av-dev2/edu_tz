@@ -1,7 +1,5 @@
 import frappe
 from frappe import _
-import pypika
-from pypika import Order
 
 def execute(filters=None):
 	data = []
@@ -11,12 +9,12 @@ def execute(filters=None):
 	if fee_data:
 		data += fee_data
 
-	summary_based, chart = get_summary_based_on_program(filters)
-
+	summary_based = get_summary_based_on_program(filters)
+	# , chart
 	if summary_based:
 		data += summary_based
 
-	return columns, data, None, chart
+	return columns, data #None, chart
 
 def get_columns(filters):
 
@@ -50,28 +48,7 @@ def get_fees(filters):
 	data = []
 	fees_records = []
 	if not filters.summary_based_on_program:
-		student_details, student_list = get_student_groups(filters)
-
-		fe = frappe.qb.DocType("Fees")
-		p_en = frappe.qb.DocType("Program Enrollment")
-		fee_details = (
-			frappe.qb.from_(fe).inner_join(p_en).on(
-				fe.student == p_en.student
-			).select(
-				fe.posting_date, fe.student, fe.student_name, fe.program, fe.program_enrollment,
-				fe.grand_total, fe.outstanding_amount, p_en.student_category
-			).where((fe.docstatus == 1)
-				& (fe.student.isin(student_list))
-				& (fe.program == filters.get("program"))
-				& (fe.company == filters.get("company"))
-				& (fe.academic_year == filters.get("academic_year"))
-				& (fe.posting_date[filters.get("from_date") : filters.get("to_date")])
-			).where((p_en.docstatus == 1)
-				& (p_en.program == filters.get("program"))
-				& (p_en.academic_year == filters.get("academic_year"))
-			)
-			.orderby(fe.posting_date, order=Order.desc)
-		).run(as_dict=1)
+		student_details, fee_details = get_fee_details(filters)
 
 		first_installment_list = []
 		second_installment_list = []
@@ -154,10 +131,8 @@ def get_fees(filters):
 					record.update({
 						"first_installment_paid_amount": first["paid_amount1"],
 					})
-
 					paid_amount += first["paid_amount1"]
 
-			
 			for second in second_installment_list:
 				if (record["student"] == second["student"] and 
 					record["program"] == second["program"] and 
@@ -192,31 +167,70 @@ def get_fees(filters):
 			data.append(record)
 	return data
 
+def get_filter_condtions(filters):
+	conditions = ""
+	if filters.get("program"):
+		conditions += "AND fe.program = %(program)s"
+		conditions += "AND p_en.program = %(program)s"
+	if filters.get("company"):
+		conditions += "AND fe.company = %(company)s"
+	if filters.get("academic_year"):
+		conditions += "AND fe.academic_year = %(academic_year)s"
+		conditions += "AND p_en.academic_year = %(academic_year)s"
+	if filters.get("from_date") and filters.get("to_date"):
+		conditions += "AND fe.posting_date BETWEEN %(from_date)s AND %(to_date)s"
+
+	return conditions
+
+def get_fee_details(filters):
+	conditions = get_filter_condtions(filters)
+	student_details, student_list = get_student_groups(filters)
+
+	student_list = tuple(student_list)
+
+	fee_details = frappe.db.sql("""
+		SELECT fe.posting_date, fe.student, fe.student_name, fe.program, 
+			fe.grand_total, fe.outstanding_amount, p_en.student_category
+			FROM `tabFees` fe
+			INNER JOIN `tabProgram Enrollment` p_en ON fe.student = p_en.student
+			WHERE fe.docstatus = 1
+			AND fe.student IN {student_list} {conditions}
+		ORDER BY fe.posting_date desc
+	""".format(student_list=student_list, conditions=conditions), filters, as_dict=1)
+
+	return student_details, fee_details
+
 def get_student_groups(filters):
 	students = []
 	if not filters.summary_based_on_program:
 		name_list = []
 
-		sg = frappe.qb.DocType("Student Group")
-		sgs = frappe.qb.DocType("Student Group Student")
-		st_groups = (
-			frappe.qb.from_(sg).inner_join(sgs).on(
-				sg.name == sgs.parent
-			).select(sg.name, sg.program, sg.academic_year, sgs.student, sgs.student_name)
-			.where((sg.disabled == 0) 
-				& (sg.program == filters.program) 
-				& (sg.academic_year == filters.academic_year)
-			).where(sgs.active == 1).orderby(sg.name)
-		).run(as_dict=1)
+		if filters.get("program") and filters.get("academic_year"):
+			conditions = " AND sg.program = %(program)s AND sg.academic_year = %(academic_year)s"
+
+		st_groups = frappe.db.sql("""
+			SELECT sg.name, sg.program, sg.academic_year, sgs.student, sgs.student_name
+			FROM `tabStudent Group` sg
+			INNER JOIN `tabStudent Group Student` sgs ON sg.name = sgs.parent
+			WHERE sg.disabled = 0  AND sgs.active = 1 {conditions}
+			ORDER BY sg.name""".format(conditions=conditions), filters, as_dict=1)
 		
 		for student in st_groups:
 			if student.academic_year == 2020:
 				program_class = student.name
+
+			elif "FORM" or "TODDLERS" in student.name:
+				p_txt = student.name
+				ph, st = p_txt.split("-")
+				program_class = st
 			
-			if student.academic_year != 2020:
+			elif student.academic_year != 2020:
 				txt = student.name
 				year, pro, stream = txt.split("-")
 				program_class = pro +' - '+ stream
+
+			else:
+				continue
 
 			name_list.append(student.student)
 			
@@ -232,17 +246,14 @@ def get_student_groups(filters):
 def get_summary_based_on_program(filters):
 	if filters.summary_based_on_program:
 		data = []
-		fee = frappe.qb.DocType("Fees")
-		program_fees = (
-			frappe.qb.from_(fee).select(
-				fee.program, fee.academic_year, fee.grand_total, fee.outstanding_amount,
-			).where((fee.docstatus == 1)
-				& (fee.program != '')
-				& (fee.company == filters.get("company"))
-				& (fee.academic_year == filters.get('academic_year'))
-				& (fee.posting_date[filters.get('from_date') : filters.get('to_date')])
-			).orderby(fee.program, order=Order.asc)
-		).run(as_dict=1)
+
+		program_fees = frappe.get_all(
+			"Fees", filters=[["docstatus", "=", 1], ["company", "=", filters.get("company")],
+				["program", "!=", ""], ["academic_year", "=", filters.get("academic_year")],
+				["posting_date", "between", [filters.get("from_date"), filters.get("to_date")]]
+			], fields=["program", "academic_year", "grand_total", "outstanding_amount"],
+			order_by="program asc"
+		)
 
 		program_list = frappe.get_all("Program", "name")
 
@@ -268,9 +279,9 @@ def get_summary_based_on_program(filters):
 				"total_amount_to_be_paid": total_amount_to_be_paid
 			})
 
-		chart = get_chart_data(data)
+		# chart = get_chart_data(data)
 		
-		return data, chart
+		return data #chart
 
 def get_chart_data(summary_data):
 	
