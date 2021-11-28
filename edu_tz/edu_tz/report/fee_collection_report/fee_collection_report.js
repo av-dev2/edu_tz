@@ -34,33 +34,13 @@ frappe.query_reports["Fee Collection Report"] = {
 			"fieldtype": "Link",
 			"label": __("Program"),
 			"options": "Program",
-			"reqd": 1
+			"reqd": 0
 		},
-		// {
-		// 	"fieldname": "studentwise_report",
-		// 	"fieldtype": "Check",
-		// 	"label": __("Studentwise Report"),
-		// 	"reqd": 0
-		// },
 		{
 			"fieldname": "summary_based_on_program",
 			"fieldtype": "Check",
 			"label": __("Summary Based on Program"),
 			"reqd": 0
 		},
-		
-		// {
-		// 	"fieldname": "batchwise_report",
-		// 	"fieldtype": "Check",
-		// 	"label": __("Batchwise Report"),
-		// 	"reqd": 0
-		// }
 	]
 };
-
-
-// "default": frappe.datetime.add_months(frappe.datetime.get_today(), -1),
-
-// "default": frappe.datetime.get_today(),
-
-// "default": "2021",
