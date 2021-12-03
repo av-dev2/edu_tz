@@ -1,5 +1,7 @@
 import frappe
 from frappe import _
+import pandas as pd
+import numpy as np
 
 def execute(filters=None):
 	data = []
@@ -19,18 +21,18 @@ def execute(filters=None):
 
 def get_filter_condtions(filters):
 	conditions = ""
-	if filters.get("program"):
-		conditions += " AND fe.program = %(program)s "
-		conditions += " AND p_en.program = %(program)s "
-		conditions += " AND sg.program = %(program)s "
 	if filters.get("company"):
 		conditions += " AND fe.company = %(company)s "
 	if filters.get("academic_year"):
 		conditions += " AND fe.academic_year = %(academic_year)s "
 		conditions += " AND p_en.academic_year = %(academic_year)s "
 		conditions += " AND sg.academic_year = %(academic_year)s "
-	if filters.get("from_date") and filters.get("to_date"):
-		conditions += " AND fe.posting_date BETWEEN %(from_date)s AND %(to_date)s "
+	if filters.get("program"):
+		conditions += " AND fe.program = %(program)s "
+		conditions += " AND p_en.program = %(program)s "
+		conditions += " AND sg.program = %(program)s "
+	if filters.get("class_name"):
+		conditions += " AND sg.name = %(class_name)s "
 
 	return conditions
 
@@ -167,15 +169,16 @@ def get_fee_details(filters):
 	conditions = get_filter_condtions(filters)
 
 	fee_details = frappe.db.sql("""
-		SELECT fe.posting_date, fe.student, fe.student_name, fe.program, 
+		SELECT fe.due_date, fe.student, fe.student_name, fe.program, 
 			fe.grand_total, fe.outstanding_amount, p_en.student_category,
 			sg.academic_year, sgs.parent
 		FROM `tabFees` fe
 			INNER JOIN `tabProgram Enrollment` p_en ON fe.student = p_en.student
 			LEFT JOIN `tabStudent Group Student` sgs ON sgs.student = fe.student AND sgs.active = 1
 			LEFT JOIN `tabStudent Group` sg ON sgs.parent = sg.name AND sg.disabled = 0  
-		WHERE fe.docstatus = 1 {conditions}
-		ORDER BY fe.student asc
+		WHERE fe.docstatus = 1 
+		AND p_en.docstatus = 1 {conditions}
+		ORDER BY fe.due_date asc, fe.student asc
 	""".format(conditions=conditions), filters, as_dict=1)
 	
 	for student in fee_details:
@@ -205,44 +208,105 @@ def get_fee_details(filters):
 
 	return student_details, student_list
 
+# def get_summary_based_on_month(filters):
+# 	conditions1 = ""
+# 	if filters.get("company"):
+# 		conditions1 += " AND fe.company = %(company)s "
+# 	if filters.get("academic_year"):
+# 		conditions1 += " AND fe.academic_year = %(academic_year)s "
+# 		conditions1 += " AND p_en.academic_year = %(academic_year)s "
+
+# 	fee_details = frappe.db.sql("""
+# 		SELECT MONTHNME(fe.due_date) AS month, fe.program, fe.academic_year, sum(fe.grand_total) AS grand_total, 
+# 			sum(fe.outstanding_amount) AS outstanding_amount, 
+# 			(sum(fe.grand_total) - sum(fe.outstanding_amount)) AS total_paid_amount
+# 		FROM `tabFees` fe
+# 		INNER JOIN `tabProgram Enrollment` p_en ON fe.student = p_en.student 
+# 		WHERE fe.docstatus = 1 AND p_en.docstatus = 1 {conditions1}
+# 		GROUP BY MONTHNAME(fe.due_date), fe.program
+# 	""".format(conditions1=conditions1), filters, as_dict=1)
+
+# 	colname = [key for key in fee_details.items()]
+# 	df = pd.DataFrame.from_records(fee_details, columns=colname)
+
+# 	pvt = pd.pivot_table(
+# 		df,
+# 		"index" = program,
+# 		"columns" = ["month"],
+# 		margins=True
+# 	)
+
+
+
 def get_summary_based_on_program(filters):
 	summary_data = []
 
 	if filters.summary_based_on_program:
 
-		program_fees = frappe.get_all(
-			"Fees", filters=[["docstatus", "=", 1], ["company", "=", filters.get("company")],
-				["program", "!=", ""], ["academic_year", "=", filters.get("academic_year")],
-				["posting_date", "between", [filters.get("from_date"), filters.get("to_date")]]
-			], fields=["program", "academic_year", "grand_total", "outstanding_amount"],
-			order_by="program asc"
+		conditions1 = ""
+		if filters.get("company"):
+			conditions1 += " AND fe.company = %(company)s "
+		if filters.get("academic_year"):
+			conditions1 += " AND fe.academic_year = %(academic_year)s "
+			conditions1 += " AND p_en.academic_year = %(academic_year)s "
+
+		# conditions = {}
+		# if filters.company:
+		# 	conditions["docstatus"] = 1
+		# 	conditions["company"] = filters.company
+		# if filters.academic_year:
+		# 	conditions["academic_year"] = filters.academic_year
+
+		# program_fees = frappe.get_all(
+		# 	"Fees", filters=conditions, fields=["program", "academic_year", "grand_total", "outstanding_amount"],
+		# 	order_by="program asc"
+		# )
+
+		fee_details = frappe.db.sql("""
+			SELECT fe.program, fe.academic_year, sum(fe.grand_total) as grand_total, 
+				sum(fe.outstanding_amount) as outstanding_amount
+			FROM `tabFees` fe
+			INNER JOIN `tabProgram Enrollment` p_en ON fe.student = p_en.student 
+			WHERE fe.docstatus = 1 AND p_en.docstatus = 1 {conditions1}
+			GROUP BY fe.program
+			""".format(conditions1=conditions1), filters, as_dict=1
 		)
 
-		program_list = frappe.get_all("Program", "name")
-
-		for program in program_list:
-			total_paid_amount = total_unpaid_amount = total_amount_to_be_paid = 0
-
-			for entry in program_fees:
-				if program.name == entry.program:
-					total_amount_to_be_paid += entry.grand_total
-					total_unpaid_amount += entry.outstanding_amount
-
-					diff_amount = entry.grand_total - entry.outstanding_amount
-					total_paid_amount += diff_amount
-
-				else:
-					continue
-
+		for fee in fee_details:
 			summary_data.append({
-				"academic_year": entry.academic_year,
-				"program": program.name,
-				"total_paid_amount": total_paid_amount,
-				"outstanding_amount": total_unpaid_amount,
-				"total_amount_to_be_paid": total_amount_to_be_paid
+				"academic_year": fee.academic_year,
+				"program": fee.program,
+				"total_paid_amount": fee.grand_total - fee.outstanding_amount,
+				"outstanding_amount": fee.outstanding_amount,
+				"total_amount_to_be_paid": fee.grand_total
 			})
+		# frappe.msgprint(str(fee))
 
-	chart = get_chart_data(summary_data)
+		# program_list = frappe.get_all("Program", "name")
+
+		# for program in program_list:
+		# 	total_paid_amount = total_unpaid_amount = total_amount_to_be_paid = 0
+
+		# 	for entry in program_fees:
+		# 		if program.name == entry.program:
+		# 			total_amount_to_be_paid += entry.grand_total
+		# 			total_unpaid_amount += entry.outstanding_amount
+
+		# 			diff_amount = entry.grand_total - entry.outstanding_amount
+		# 			total_paid_amount += diff_amount
+
+		# 		else:
+		# 			continue
+
+			# summary_data.append({
+			# 	"academic_year": entry.academic_year,
+			# 	"program": program.name,
+			# 	"total_paid_amount": total_paid_amount,
+			# 	"outstanding_amount": total_unpaid_amount,
+			# 	"total_amount_to_be_paid": total_amount_to_be_paid
+			# })
+
+		chart = get_chart_data(summary_data)
 		
 	return summary_data, chart
 
