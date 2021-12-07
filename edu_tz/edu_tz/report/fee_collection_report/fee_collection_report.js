@@ -5,18 +5,6 @@
 frappe.query_reports["Fee Collection Report"] = {
 	"filters": [
 		{
-			"fieldname": "from_date",
-			"fieldtype": "Date",
-			"label": __("From Date"),
-			"reqd": 1
-		},
-		{
-			"fieldname": "to_date",
-			"fieldtype": "Date",
-			"label": __("To Date"),
-			"reqd": 1
-		},
-		{
 			"fieldname": "academic_year",
 			"fieldtype": "Data",
 			"label": __("Academic Year"),
@@ -37,10 +25,10 @@ frappe.query_reports["Fee Collection Report"] = {
 			"reqd": 0
 		},
 		{
-			"fieldname": "summary_based_on_program",
+			"fieldname": "summary_based_on_month",
 			"fieldtype": "Check",
-			"label": __("Summary Based on Program"),
+			"label": __("Summary Based on Month"),
 			"reqd": 0
-		},
+		}
 	]
 };
