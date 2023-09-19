@@ -33,12 +33,6 @@ frappe.query_reports["Fee Collection Report"] = {
 			"reqd": 0
 		},
 		{
-			"fieldname": "summary_based_on_program",
-			"fieldtype": "Check",
-			"label": __("Summary Based on Program"),
-			"reqd": 0
-		},
-    {
 			"fieldname": "summary_based_on_month",
 			"fieldtype": "Check",
 			"label": __("Summary Based on Month"),
