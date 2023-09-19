@@ -38,5 +38,11 @@ frappe.query_reports["Fee Collection Report"] = {
 			"label": __("Summary Based on Program"),
 			"reqd": 0
 		},
+    {
+			"fieldname": "summary_based_on_month",
+			"fieldtype": "Check",
+			"label": __("Summary Based on Month"),
+			"reqd": 0
+		}
 	]
 };

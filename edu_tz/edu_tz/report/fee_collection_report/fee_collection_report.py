@@ -2,43 +2,46 @@ import frappe
 from frappe import _
 
 def execute(filters=None):
-	data = []
+	
 	columns = get_columns(filters)
 
-	fee_data = get_fees(filters)
-	
-	if fee_data:
-		data += fee_data
+	if filters.summary_based_on_month:
+		month_summary, chart = get_summary_based_on_month(filters)
 
-	summary_based, chart = get_summary_based_on_program(filters)
+		if month_summary:
+			data = month_summary
+		
 	
-	if summary_based:
-		data += summary_based
-
-	return columns, data, None, chart
+	if not filters.summary_based_on_month:
+		chart = {}
+		fee_data = get_fees(filters)
+		
+		if fee_data:
+			data = fee_data
+	
+	return columns, data, chart
 
 def get_filter_condtions(filters):
 	conditions = ""
-	if filters.get("program"):
-		conditions += " AND fe.program = %(program)s "
-		conditions += " AND p_en.program = %(program)s "
-		conditions += " AND sg.program = %(program)s "
 	if filters.get("company"):
 		conditions += " AND fe.company = %(company)s "
 	if filters.get("academic_year"):
 		conditions += " AND fe.academic_year = %(academic_year)s "
 		conditions += " AND p_en.academic_year = %(academic_year)s "
 		conditions += " AND sg.academic_year = %(academic_year)s "
-	if filters.get("from_date") and filters.get("to_date"):
-		conditions += " AND fe.posting_date BETWEEN %(from_date)s AND %(to_date)s "
+	if filters.get("program"):
+		conditions += " AND fe.program = %(program)s "
+		conditions += " AND p_en.program = %(program)s "
+		conditions += " AND sg.program = %(program)s "
 
 	return conditions
 
 def get_columns(filters):
 
-	if filters.summary_based_on_program:
+	if filters.summary_based_on_month:
 		columns = [
-			{"fieldname": "academic_year", "fieldtype": "Data", "label": _("Academic Year")},
+			{"fieldname": "year", "fieldtype": "Data", "label": _("Year of Due Date")},
+			{"fieldname": "month", "fieldtype": "Data", "label": _("Month")},
 			{"fieldname": "program", "fieldtype": "Data", "label": _("Program")},
 			{"fieldname": "total_amount_to_be_paid", "fieldtype": "Currency", "label": _("Total Fee to be Collected")},
 			{"fieldname": "total_paid_amount", "fieldtype": "Currency", "label": _("Total Fee Collected")},
@@ -57,6 +60,7 @@ def get_columns(filters):
 			{"fieldname": "2nd_installment_paid_amount", "fieldtype": "Currency", "label": _("2nd Installment Paid")},
 			{"fieldname": "3rd_installment_paid_amount", "fieldtype": "Currency", "label":_("3rd Installment Paid")},
 			{"fieldname": "4th_installment_paid_amount", "fieldtype": "Currency", "label": _("4th Installment Paid")},
+			{"fieldname": "5th_installment_paid_amount", "fieldtype": "Currency", "label": _("5th Installment Paid")},
 			{"fieldname": "total_paid_amount", "fieldtype": "Currency", "label": _("Total Fee Collected")},
 			{"fieldname": "outstanding_amount", "fieldtype": "Currency", "label": _("Outstanding Amount")}
 		]
@@ -72,6 +76,7 @@ def get_fees(filters):
 		second_installment_list = []
 		third_installment_list = []
 		fourth_installment_list = []
+		fifth_installment_list = []
 		
 		for  st_name in student_name_list:
 			total_amount_to_be_paid = total_unpaid_amount = 0
@@ -101,11 +106,17 @@ def get_fees(filters):
 						})
 						third_installment_list.append(st_name)
 
-					else:
+					elif st_name not in fourth_installment_list:
 						st_name.update({
 							"paid_amount4": student_row["grand_total"] - student_row["outstanding_amount"]
 						})
 						fourth_installment_list.append(st_name)
+
+					else:
+						st_name.update({
+							"paid_amount5": student_row["grand_total"] - student_row["outstanding_amount"]
+						})
+						fifth_installment_list.append(st_name)
 
 			st_name.update({
 				"total_amount_to_be_paid": total_amount_to_be_paid,
@@ -155,6 +166,16 @@ def get_fees(filters):
 					})
 					paid_amount += fourth["paid_amount4"]
 
+			for fifth in fifth_installment_list:
+				if (record["student"] == fifth["student"] and 
+					record["program"] == fifth["program"] and
+					record["class_name"] == fifth["class_name"]
+				):
+					record.update({
+						"5th_installment_paid_amount": fifth["paid_amount5"]
+					})
+					paid_amount += fifth["paid_amount5"]
+			
 			record["total_paid_amount"] = paid_amount
 			fees_record.append(record)
 	return fees_record
@@ -167,15 +188,16 @@ def get_fee_details(filters):
 	conditions = get_filter_condtions(filters)
 
 	fee_details = frappe.db.sql("""
-		SELECT fe.posting_date, fe.student, fe.student_name, fe.program, 
+		SELECT fe.due_date, fe.student, fe.student_name, fe.program, 
 			fe.grand_total, fe.outstanding_amount, p_en.student_category,
 			sg.academic_year, sgs.parent
 		FROM `tabFees` fe
 			INNER JOIN `tabProgram Enrollment` p_en ON fe.student = p_en.student
 			LEFT JOIN `tabStudent Group Student` sgs ON sgs.student = fe.student AND sgs.active = 1
 			LEFT JOIN `tabStudent Group` sg ON sgs.parent = sg.name AND sg.disabled = 0  
-		WHERE fe.docstatus = 1 {conditions}
-		ORDER BY fe.student asc
+		WHERE fe.docstatus = 1 
+		AND p_en.docstatus = 1 {conditions}
+		ORDER BY fe.due_date asc, fe.student asc
 	""".format(conditions=conditions), filters, as_dict=1)
 	
 	for student in fee_details:
@@ -205,46 +227,43 @@ def get_fee_details(filters):
 
 	return student_details, student_list
 
-def get_summary_based_on_program(filters):
-	summary_data = []
+def get_summary_based_on_month(filters):
 
-	if filters.summary_based_on_program:
+	if filters.summary_based_on_month:
+		chart = {}
+		summary_data = []
 
-		program_fees = frappe.get_all(
-			"Fees", filters=[["docstatus", "=", 1], ["company", "=", filters.get("company")],
-				["program", "!=", ""], ["academic_year", "=", filters.get("academic_year")],
-				["posting_date", "between", [filters.get("from_date"), filters.get("to_date")]]
-			], fields=["program", "academic_year", "grand_total", "outstanding_amount"],
-			order_by="program asc"
+		conditions = ""
+		if filters.get("company"):
+			conditions += " AND fe.company = %(company)s "
+		if filters.get("academic_year"):
+			conditions += " AND fe.academic_year = %(academic_year)s "
+			conditions += " AND p_en.academic_year = %(academic_year)s "
+
+		fee_details = frappe.db.sql("""
+			SELECT YEAR(fe.due_date) as year, MONTHNAME(fe.due_date) AS month, fe.program, SUM(fe.grand_total) AS grand_total, 
+				SUM(fe.outstanding_amount) AS outstanding_amount
+			FROM `tabFees` fe
+			INNER JOIN `tabProgram Enrollment` p_en ON fe.student = p_en.student AND fe.program = p_en.program
+			WHERE fe.docstatus = 1 AND p_en.docstatus = 1 {conditions}
+			GROUP BY MONTHNAME(fe.due_date), fe.program
+			ORDER BY YEAR(fe.due_date), MONTHNAME(fe.due_date), fe.program
+			""".format(conditions=conditions), filters, as_dict=1
 		)
 
-		program_list = frappe.get_all("Program", filters={"company": filters.get("company")}, fields=["name"])
-
-		for program in program_list:
-			total_paid_amount = total_unpaid_amount = total_amount_to_be_paid = 0
-
-			for entry in program_fees:
-				if program.name == entry.program:
-					total_amount_to_be_paid += entry.grand_total
-					total_unpaid_amount += entry.outstanding_amount
-
-					diff_amount = entry.grand_total - entry.outstanding_amount
-					total_paid_amount += diff_amount
-
-				else:
-					continue
-
+		for fee in fee_details:
 			summary_data.append({
-				"academic_year": entry.academic_year,
-				"program": program.name,
-				"total_paid_amount": total_paid_amount,
-				"outstanding_amount": total_unpaid_amount,
-				"total_amount_to_be_paid": total_amount_to_be_paid
+				"year": fee.year,
+				"month": fee.month,
+				"program": fee.program,
+				"total_paid_amount": fee.grand_total - fee.outstanding_amount,
+				"outstanding_amount": fee.outstanding_amount,
+				"total_amount_to_be_paid": fee.grand_total
 			})
 
-	chart = get_chart_data(summary_data)
+		chart = get_chart_data(summary_data)
 		
-	return summary_data, chart
+		return summary_data, chart
 
 def get_chart_data(summary_data):
 	
@@ -282,5 +301,3 @@ def get_chart_data(summary_data):
 		},
 		'type': 'bar'
 	}
-
-
