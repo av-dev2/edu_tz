@@ -96,9 +96,6 @@ doc_events = {
         "after_insert": "edu_tz.edu_tz.api.student.after_insert",
         "validate": "edu_tz.edu_tz.api.student.validate",
     },
-    "Fees": {
-        "on_submit": "edu_tz.edu_tz.api.fees.on_submit",
-    },
     "Payment Entry": {
         "on_submit": "edu_tz.edu_tz.api.payment.on_submit",
     },
