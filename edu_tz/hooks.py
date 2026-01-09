@@ -92,10 +92,10 @@ app_license = "MIT"
 # Hook on document methods and events
 
 doc_events = {
-    # "Student": {
-    #     "after_insert": "edu_tz.edu_tz.api.student.after_insert",
-    #     "validate": "edu_tz.edu_tz.api.student.validate",
-    # },
+    "Student": {
+        "after_insert": "edu_tz.edu_tz.api.student.after_insert",
+        "validate": "edu_tz.edu_tz.api.student.validate",
+    },
     "Payment Entry": {
         "on_submit": "edu_tz.edu_tz.api.payment.on_submit",
     },
