@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from frappe.utils import getdate
+from erpnext.accounts.utils import update_voucher_outstanding
 
 
 def on_submit(doc, method):
@@ -15,6 +16,8 @@ def create_sales_invoice(doc):
         and doc.references[0].reference_doctype == "Fees"
     ):
         fees_doc = frappe.get_doc("Fees", doc.references[0].reference_name)
+        if not fees_doc.components:
+            frappe.throw(_("Fees document {0} has no fee components").format(fees_doc.name))
         item_name = fees_doc.components[0].fees_category
         income_account = fees_doc.sales_invoice_income_account
         customer = frappe.get_value("Student", doc.party, "customer")
@@ -51,6 +54,15 @@ def create_sales_invoice(doc):
         frappe.flags.ignore_account_permission = True
         sales_invoice.set_missing_values()
         sales_invoice.save(ignore_permissions=True)
+
+        update_voucher_outstanding(
+            "Fees",
+            fees_doc.name,
+            fees_doc.receivable_account,
+            "Student",
+            fees_doc.student,
+        )
+
         frappe.msgprint(
             _("Draft Sales Invoice created {0}").format(sales_invoice.name), alert=True
         )
