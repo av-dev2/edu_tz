@@ -15,6 +15,10 @@ def create_journal_entry(doc):
         return
     amount = doc.base_net_total
     debit_account = frappe.get_value("Fees", doc.fees, "sales_invoice_income_account")
+    if not debit_account:
+        frappe.throw(
+            _("Please set Sales Invoice Income Account on Fees document {0}").format(doc.fees)
+        )
     party_account = get_party_account("Customer", doc.customer, doc.company)
 
     jl_rows = []
@@ -27,7 +31,7 @@ def create_journal_entry(doc):
     jl_rows.append(debit_row)
 
     credit_row = dict(
-        party_type="customer",
+        party_type="Customer",
         party=doc.customer,
         account=party_account,
         credit_in_account_currency=flt(amount, doc.precision("base_net_total")),
