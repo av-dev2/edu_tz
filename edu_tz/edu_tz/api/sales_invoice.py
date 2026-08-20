@@ -1,8 +1,7 @@
-from __future__ import unicode_literals
 import frappe
-from frappe import _
 from erpnext.accounts.party import get_party_account
-from frappe.utils import nowdate, flt
+from frappe import _
+from frappe.utils import flt, nowdate
 
 
 def on_submit(doc, method):
@@ -16,9 +15,7 @@ def create_journal_entry(doc):
     amount = doc.base_net_total
     debit_account = frappe.get_value("Fees", doc.fees, "sales_invoice_income_account")
     if not debit_account:
-        frappe.throw(
-            _("Please set Sales Invoice Income Account on Fees document {0}").format(doc.fees)
-        )
+        frappe.throw(_("Please set Sales Invoice Income Account on Fees document {0}").format(doc.fees))
     party_account = get_party_account("Customer", doc.customer, doc.company)
 
     jl_rows = []
@@ -45,14 +42,12 @@ def create_journal_entry(doc):
     user_remark = "Against Sales Inoice " + doc.name + " For Customer " + doc.customer
 
     jv_doc = frappe.get_doc(
-        dict(
-            doctype="Journal Entry",
-            posting_date=nowdate(),
-            accounts=jl_rows,
-            company=doc.company,
-            multi_currency=0,
-            user_remark=user_remark,
-        )
+        doctype="Journal Entry",
+        posting_date=nowdate(),
+        accounts=jl_rows,
+        company=doc.company,
+        multi_currency=0,
+        user_remark=user_remark,
     )
 
     jv_doc.flags.ignore_permissions = True
@@ -60,8 +55,6 @@ def create_journal_entry(doc):
     jv_doc.save()
     jv_doc.submit()
     jv_url = frappe.utils.get_url_to_form(jv_doc.doctype, jv_doc.name)
-    si_msgprint = _("Journal Entry Created <a href='{0}'>{1}</a>").format(
-        jv_url, jv_doc.name
-    )
+    si_msgprint = _("Journal Entry Created <a href='{0}'>{1}</a>").format(jv_url, jv_doc.name)
     frappe.msgprint(si_msgprint)
     return jv_doc.name
