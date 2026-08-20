@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from . import __version__ as app_version
-
 app_name = "edu_tz"
 app_title = "Edu Tz"
 app_publisher = "Aakvatech"
@@ -10,6 +6,7 @@ app_icon = "octicon octicon-file-directory"
 app_color = "grey"
 app_email = "info@aakvatech.com"
 app_license = "MIT"
+required_apps = ["education", "csf_tz"]
 
 # Includes in <head>
 # ------------------
@@ -102,6 +99,54 @@ doc_events = {
     "Sales Invoice": {
         "on_submit": "edu_tz.edu_tz.api.sales_invoice.on_submit",
     },
+    "Fees": {
+        "before_insert": "edu_tz.edu_tz.overrides.fees.set_fee_abbr",
+        "after_insert": "edu_tz.edu_tz.nmb.api.set_callback_token",
+        "on_submit": "edu_tz.edu_tz.nmb.api.invoice_submission",
+        "before_cancel": "edu_tz.edu_tz.overrides.fees.on_cancel_fees",
+    },
+    "Program Enrollment": {
+        "before_submit": "edu_tz.edu_tz.overrides.program_enrollment.validate_submit_program_enrollment",
+    },
+    "Student Applicant": {
+        "on_update_after_submit": "edu_tz.edu_tz.overrides.student_applicant.make_student_applicant_fees",
+    },
+}
+
+# create_course_enrollments is called internally, so doc_events cannot intercept it;
+# this replaces the runtime monkey-patch csf_tz used before.
+# nosemgrep: override-doctype-class
+override_doctype_class = {
+    "Program Enrollment": "edu_tz.edu_tz.overrides.program_enrollment.EduTzProgramEnrollment",
+}
+
+doctype_js = {
+    "Fees": "edu_tz/fees.js",
+    "Program Enrollment": "edu_tz/program_enrollment.js",
+    "Program Enrollment Tool": "edu_tz/program_enrollment_tool.js",
+    "Student Applicant": "edu_tz/student_applicant.js",
+    "Company": "edu_tz/company.js",
+}
+
+doctype_list_js = {
+    "Custom Field": "patches/custom_fields/custom_field.js",
+    "Property Setter": "patches/property_setter/property_setter.js",
+}
+
+after_install = [
+    "edu_tz.patches.custom_fields.create_custom_fields.execute",
+    "edu_tz.patches.property_setter.create_property_setter.execute",
+]
+
+after_migrate = [
+    "edu_tz.patches.custom_fields.create_custom_fields.execute",
+    "edu_tz.patches.property_setter.create_property_setter.execute",
+]
+
+scheduler_events = {
+    "daily": [
+        "edu_tz.edu_tz.nmb.api.reconciliation",
+    ],
 }
 
 # Scheduled Tasks
@@ -151,66 +196,3 @@ doc_events = {
 
 # User Data Protection
 # --------------------
-
-user_data_fields = [
-    {
-        "doctype": "{doctype_1}",
-        "filter_by": "{filter_by}",
-        "redact_fields": ["{field_1}", "{field_2}"],
-        "partial": 1,
-    },
-    {
-        "doctype": "{doctype_2}",
-        "filter_by": "{filter_by}",
-        "partial": 1,
-    },
-    {
-        "doctype": "{doctype_3}",
-        "strict": False,
-    },
-    {"doctype": "{doctype_4}"},
-]
-
-
-fixtures = [
-    {
-        "doctype": "Custom Field",
-        "filters": [
-            [
-                "name",
-                "in",
-                (
-                    "Customer-student",
-                    "Student-customer",
-                    "Fees-sales_invoice_income_account",
-                    "Fee Structure-sales_invoice_income_account",
-                    "Sales Invoice-payment_entry",
-                    "Sales Invoice-fees",
-                ),
-            ]
-        ],
-    },
-    {
-        "doctype": "Property Setter",
-        "filters": [
-            [
-                "name",
-                "in",
-                (
-                    "Fee Structure-search_fields",
-                    "Fee Structure-title_field",
-                    "Fees-letter_head-fetch_from",
-                    "Fees-main-track_changes",
-                    "Guardian-naming_series-default",
-                    "Guardian-students-read_only",
-                    "Program Enrollment-enrolled_courses-collapsible",
-                    "Program Enrollment-section_break_7-collapsible",
-                    "Program Fee-due_date-columns",
-                    "Program Fee-student_category-columns",
-                    "Program Fee-student_category-fetch_from",
-                    "Program-program_fee-allow_bulk_edit",
-                ),
-            ]
-        ],
-    },
-]
