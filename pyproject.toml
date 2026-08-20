@@ -19,8 +19,11 @@ education = ">=16.0.0,<17.0.0"
 csf_tz = ">=16.0.0,<17.0.0"
 
 [tool.ruff]
-line-length = 120
+line-length = 110
 target-version = "py310"
+
+[tool.ruff.format]
+indent-style = "tab"
 
 [tool.ruff.lint]
 select = [
@@ -32,7 +35,9 @@ select = [
     "B",
 ]
 ignore = [
-    "E501",
+    "E101",
     "E402",
+    "E501",
     "E741",
+    "W191",
 ]
