@@ -89,64 +89,64 @@ required_apps = ["education", "csf_tz"]
 # Hook on document methods and events
 
 doc_events = {
-    "Student": {
-        "after_insert": "edu_tz.edu_tz.api.student.after_insert",
-        "validate": "edu_tz.edu_tz.api.student.validate",
-    },
-    "Payment Entry": {
-        "on_submit": "edu_tz.edu_tz.api.payment.on_submit",
-    },
-    "Sales Invoice": {
-        "on_submit": "edu_tz.edu_tz.api.sales_invoice.on_submit",
-    },
-    "Fees": {
-        "before_insert": "edu_tz.edu_tz.overrides.fees.set_fee_abbr",
-        "after_insert": "edu_tz.edu_tz.nmb.api.set_callback_token",
-        "on_submit": "edu_tz.edu_tz.nmb.api.invoice_submission",
-        "before_cancel": "edu_tz.edu_tz.overrides.fees.on_cancel_fees",
-    },
-    "Program Enrollment": {
-        "before_submit": "edu_tz.edu_tz.overrides.program_enrollment.validate_submit_program_enrollment",
-    },
-    "Student Applicant": {
-        "on_update_after_submit": "edu_tz.edu_tz.overrides.student_applicant.make_student_applicant_fees",
-    },
+	"Student": {
+		"after_insert": "edu_tz.edu_tz.api.student.after_insert",
+		"validate": "edu_tz.edu_tz.api.student.validate",
+	},
+	"Payment Entry": {
+		"on_submit": "edu_tz.edu_tz.api.payment.on_submit",
+	},
+	"Sales Invoice": {
+		"on_submit": "edu_tz.edu_tz.api.sales_invoice.on_submit",
+	},
+	"Fees": {
+		"before_insert": "edu_tz.edu_tz.overrides.fees.set_fee_abbr",
+		"after_insert": "edu_tz.edu_tz.nmb.api.set_callback_token",
+		"on_submit": "edu_tz.edu_tz.nmb.api.invoice_submission",
+		"before_cancel": "edu_tz.edu_tz.overrides.fees.on_cancel_fees",
+	},
+	"Program Enrollment": {
+		"before_submit": "edu_tz.edu_tz.overrides.program_enrollment.validate_submit_program_enrollment",
+	},
+	"Student Applicant": {
+		"on_update_after_submit": "edu_tz.edu_tz.overrides.student_applicant.make_student_applicant_fees",
+	},
 }
 
 # create_course_enrollments is called internally, so doc_events cannot intercept it;
 # this replaces the runtime monkey-patch csf_tz used before.
 # nosemgrep: override-doctype-class
 override_doctype_class = {
-    "Program Enrollment": "edu_tz.edu_tz.overrides.program_enrollment.EduTzProgramEnrollment",
+	"Program Enrollment": "edu_tz.edu_tz.overrides.program_enrollment.EduTzProgramEnrollment",
 }
 
 doctype_js = {
-    "Fees": "edu_tz/fees.js",
-    "Program Enrollment": "edu_tz/program_enrollment.js",
-    "Program Enrollment Tool": "edu_tz/program_enrollment_tool.js",
-    "Student Applicant": "edu_tz/student_applicant.js",
-    "Company": "edu_tz/company.js",
+	"Fees": "edu_tz/fees.js",
+	"Program Enrollment": "edu_tz/program_enrollment.js",
+	"Program Enrollment Tool": "edu_tz/program_enrollment_tool.js",
+	"Student Applicant": "edu_tz/student_applicant.js",
+	"Company": "edu_tz/company.js",
 }
 
 doctype_list_js = {
-    "Custom Field": "patches/custom_fields/custom_field.js",
-    "Property Setter": "patches/property_setter/property_setter.js",
+	"Custom Field": "patches/custom_fields/custom_field.js",
+	"Property Setter": "patches/property_setter/property_setter.js",
 }
 
 after_install = [
-    "edu_tz.patches.custom_fields.create_custom_fields.execute",
-    "edu_tz.patches.property_setter.create_property_setter.execute",
+	"edu_tz.patches.custom_fields.create_custom_fields.execute",
+	"edu_tz.patches.property_setter.create_property_setter.execute",
 ]
 
 after_migrate = [
-    "edu_tz.patches.custom_fields.create_custom_fields.execute",
-    "edu_tz.patches.property_setter.create_property_setter.execute",
+	"edu_tz.patches.custom_fields.create_custom_fields.execute",
+	"edu_tz.patches.property_setter.create_property_setter.execute",
 ]
 
 scheduler_events = {
-    "daily": [
-        "edu_tz.edu_tz.nmb.api.reconciliation",
-    ],
+	"daily": [
+		"edu_tz.edu_tz.nmb.api.reconciliation",
+	],
 }
 
 # Scheduled Tasks

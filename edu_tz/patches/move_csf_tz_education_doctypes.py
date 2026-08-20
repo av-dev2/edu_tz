@@ -6,6 +6,6 @@ MOVED_DOCTYPES = ("Student Applicant Fees", "NMB Callback")
 
 
 def execute():
-    for doctype in MOVED_DOCTYPES:
-        if frappe.db.exists("DocType", doctype):
-            frappe.db.set_value("DocType", doctype, "module", "Edu Tz", update_modified=False)
+	for doctype in MOVED_DOCTYPES:
+		if frappe.db.exists("DocType", doctype):
+			frappe.db.set_value("DocType", doctype, "module", "Edu Tz", update_modified=False)

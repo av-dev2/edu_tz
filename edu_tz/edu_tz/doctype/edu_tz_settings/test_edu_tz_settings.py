@@ -6,4 +6,4 @@ import unittest
 
 
 class TestEduTzSettings(unittest.TestCase):
-    pass
+	pass
