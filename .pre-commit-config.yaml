@@ -1,5 +1,6 @@
-exclude: 'node_modules|.git'
+exclude: 'node_modules'
 default_stages: [pre-commit]
+default_install_hook_types: [pre-commit, commit-msg]
 fail_fast: false
 
 repos:
@@ -15,6 +16,7 @@ repos:
       - id: check-json
       - id: check-toml
       - id: check-yaml
+      - id: debug-statements
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.1
@@ -24,3 +26,37 @@ repos:
         args: ["--fix"]
       - id: ruff-format
         name: "ruff format"
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.0.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+
+  - repo: local
+    hooks:
+      - id: frappe-semgrep
+        name: semgrep (frappe rules)
+        entry: semgrep --config /home/dev/frappe-semgrep-rules/rules --error --skip-unknown-extensions
+        language: system
+        types_or: [python, javascript]
+        pass_filenames: true
+        require_serial: true
+
+      - id: commit-msg-length
+        name: check commit message length
+        entry: python3
+        args:
+          - -c
+          - |
+            import sys
+            lines = open(sys.argv[1]).read().splitlines()
+            if not lines: sys.exit(0)
+            if len(lines[0].strip()) > 72:
+                print("Error: Commit subject line too long (> 72 chars).")
+                sys.exit(1)
+            if len(lines) > 1 and lines[1].strip() != "":
+                print("Error: Second line of commit message must be empty.")
+                sys.exit(1)
+        language: system
+        stages: [commit-msg]
