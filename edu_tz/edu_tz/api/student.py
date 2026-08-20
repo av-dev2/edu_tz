@@ -1,7 +1,6 @@
-from __future__ import unicode_literals
 import frappe
-from frappe import _
 from erpnext import get_default_currency
+from frappe import _
 
 
 def after_insert(doc, method):
@@ -20,14 +19,11 @@ def create_customer(doc):
         {
             "doctype": "Customer",
             "customer_name": doc.student_name,
-            "customer_group": "Student"
-            or frappe.db.get_single_value("Selling Settings", "customer_group"),
+            "customer_group": "Student" or frappe.db.get_single_value("Selling Settings", "customer_group"),
             "territory": frappe.db.get_single_value("Selling Settings", "territory"),
             "customer_type": "Individual",
             "default_currency": get_default_currency(),
-            "default_price_list": frappe.db.get_single_value(
-                "Selling Settings", "selling_price_list"
-            ),
+            "default_price_list": frappe.db.get_single_value("Selling Settings", "selling_price_list"),
             "language": frappe.db.get_single_value("System Settings", "language"),
             "student": doc.name,
         }

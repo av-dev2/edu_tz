@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import cint, cstr
+from frappe.utils import cstr
 
 
 def execute(filters):
@@ -52,14 +52,17 @@ def execute(filters):
     room_details = frappe.db.sql(
         """
 		SELECT p.name AS program, SUM(r.seating_capacity) AS total_students,
-            COUNT(r.room_name) AS total_rooms, 
+            COUNT(r.room_name) AS total_rooms,
             COUNT(r.seating_capacity) AS no_of_room_used
 		FROM `tabRoom` r
 		INNER JOIN `tabProgram` p ON r.edu_tz_program = p.name
 		WHERE p.company = %(company)s
 		GROUP BY p.name
-	""", filters, as_dict=1)
-    
+	""",
+        filters,
+        as_dict=1,
+    )
+
     for enroll in enrollment_details:
         for room in room_details:
             if enroll.program == room.program:
@@ -74,10 +77,7 @@ def execute(filters):
                         "class_name": enroll.program,
                         "class_avilable": room["total_rooms"],
                         "class_in_use": room["no_of_room_used"],
-                        "rate": cstr(
-                            (room["no_of_room_used"] / room["total_rooms"]) * 100
-                        )
-                        + "%",
+                        "rate": cstr((room["no_of_room_used"] / room["total_rooms"]) * 100) + "%",
                         "class_capacity": room["total_students"],
                         "no_of_students": enroll.no_of_students,
                         "vacancies": vacancies,
