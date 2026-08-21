@@ -4,3 +4,5 @@
 *.swp
 tags
 edu_tz/docs/current
+# cloned by the frappe-semgrep pre-commit hook
+frappe-semgrep-rules/
