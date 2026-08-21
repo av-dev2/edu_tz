@@ -42,14 +42,12 @@ def create_journal_entry(doc):
 	user_remark = "Against Sales Inoice " + doc.name + " For Customer " + doc.customer
 
 	jv_doc = frappe.get_doc(
-		dict(
-			doctype="Journal Entry",
-			posting_date=nowdate(),
-			accounts=jl_rows,
-			company=doc.company,
-			multi_currency=0,
-			user_remark=user_remark,
-		)
+		doctype="Journal Entry",
+		posting_date=nowdate(),
+		accounts=jl_rows,
+		company=doc.company,
+		multi_currency=0,
+		user_remark=user_remark,
 	)
 
 	jv_doc.flags.ignore_permissions = True
