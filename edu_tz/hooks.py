@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from . import __version__ as app_version
-
 app_name = "edu_tz"
 app_title = "Edu Tz"
 app_publisher = "Aakvatech"
@@ -34,7 +30,7 @@ app_license = "MIT"
 
 # include js in doctype views
 doctype_js = {
-    "Payment Reconciliation": "public/js/payment_reconciliation.js",
+	"Payment Reconciliation": "public/js/payment_reconciliation.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -94,16 +90,16 @@ doctype_js = {
 # Hook on document methods and events
 
 doc_events = {
-    "Student": {
-        "after_insert": "edu_tz.edu_tz.api.student.after_insert",
-        "validate": "edu_tz.edu_tz.api.student.validate",
-    },
-    "Payment Entry": {
-        "on_submit": "edu_tz.edu_tz.api.payment.on_submit",
-    },
-    "Sales Invoice": {
-        "on_submit": "edu_tz.edu_tz.api.sales_invoice.on_submit",
-    },
+	"Student": {
+		"after_insert": "edu_tz.edu_tz.api.student.after_insert",
+		"validate": "edu_tz.edu_tz.api.student.validate",
+	},
+	"Payment Entry": {
+		"on_submit": "edu_tz.edu_tz.api.payment.on_submit",
+	},
+	"Sales Invoice": {
+		"on_submit": "edu_tz.edu_tz.api.sales_invoice.on_submit",
+	},
 }
 
 # Scheduled Tasks
@@ -155,64 +151,64 @@ doc_events = {
 # --------------------
 
 user_data_fields = [
-    {
-        "doctype": "{doctype_1}",
-        "filter_by": "{filter_by}",
-        "redact_fields": ["{field_1}", "{field_2}"],
-        "partial": 1,
-    },
-    {
-        "doctype": "{doctype_2}",
-        "filter_by": "{filter_by}",
-        "partial": 1,
-    },
-    {
-        "doctype": "{doctype_3}",
-        "strict": False,
-    },
-    {"doctype": "{doctype_4}"},
+	{
+		"doctype": "{doctype_1}",
+		"filter_by": "{filter_by}",
+		"redact_fields": ["{field_1}", "{field_2}"],
+		"partial": 1,
+	},
+	{
+		"doctype": "{doctype_2}",
+		"filter_by": "{filter_by}",
+		"partial": 1,
+	},
+	{
+		"doctype": "{doctype_3}",
+		"strict": False,
+	},
+	{"doctype": "{doctype_4}"},
 ]
 
 
 fixtures = [
-    {
-        "doctype": "Custom Field",
-        "filters": [
-            [
-                "name",
-                "in",
-                (
-                    "Customer-student",
-                    "Student-customer",
-                    "Fees-sales_invoice_income_account",
-                    "Fee Structure-sales_invoice_income_account",
-                    "Sales Invoice-payment_entry",
-                    "Sales Invoice-fees",
-                ),
-            ]
-        ],
-    },
-    {
-        "doctype": "Property Setter",
-        "filters": [
-            [
-                "name",
-                "in",
-                (
-                    "Fee Structure-search_fields",
-                    "Fee Structure-title_field",
-                    "Fees-letter_head-fetch_from",
-                    "Fees-main-track_changes",
-                    "Guardian-naming_series-default",
-                    "Guardian-students-read_only",
-                    "Program Enrollment-enrolled_courses-collapsible",
-                    "Program Enrollment-section_break_7-collapsible",
-                    "Program Fee-due_date-columns",
-                    "Program Fee-student_category-columns",
-                    "Program Fee-student_category-fetch_from",
-                    "Program-program_fee-allow_bulk_edit",
-                ),
-            ]
-        ],
-    },
+	{
+		"doctype": "Custom Field",
+		"filters": [
+			[
+				"name",
+				"in",
+				(
+					"Customer-student",
+					"Student-customer",
+					"Fees-sales_invoice_income_account",
+					"Fee Structure-sales_invoice_income_account",
+					"Sales Invoice-payment_entry",
+					"Sales Invoice-fees",
+				),
+			]
+		],
+	},
+	{
+		"doctype": "Property Setter",
+		"filters": [
+			[
+				"name",
+				"in",
+				(
+					"Fee Structure-search_fields",
+					"Fee Structure-title_field",
+					"Fees-letter_head-fetch_from",
+					"Fees-main-track_changes",
+					"Guardian-naming_series-default",
+					"Guardian-students-read_only",
+					"Program Enrollment-enrolled_courses-collapsible",
+					"Program Enrollment-section_break_7-collapsible",
+					"Program Fee-due_date-columns",
+					"Program Fee-student_category-columns",
+					"Program Fee-student_category-fetch_from",
+					"Program-program_fee-allow_bulk_edit",
+				),
+			]
+		],
+	},
 ]
