@@ -290,24 +290,25 @@ def reconciliation(doc=None, method=None):
 		for transaction in message["transactions"]:
 			if not is_known_callback(transaction):
 				continue
-			doc_info = get_fee_info(message["reference"])
+			doc_info = get_fee_info(transaction["reference"])
 			if not doc_info["name"]:
 				continue
-			message["fees_token"] = frappe.get_value(doc_info["doctype"], doc_info["name"], "callback_token")
-			message["doctype"] = "NMB Callback"
+			callback = dict(transaction)
+			callback["doctype"] = "NMB Callback"
+			callback["fees_token"] = frappe.get_value(doc_info["doctype"], doc_info["name"], "callback_token")
 			enqueue(
 				method=make_payment_entry,
 				queue="short",
 				timeout=10000,
 				is_async=True,
-				kwargs=frappe.get_doc(message),
+				kwargs=frappe.get_doc(callback),
 			)
 
 
-def is_known_callback(transaction) -> bool:
+def is_known_callback(transaction: dict) -> bool:
 	callbacks = frappe.get_all(
 		"NMB Callback",
-		filters={"reference": transaction.reference, "receipt": transaction.receipt},
+		filters={"reference": transaction["reference"], "receipt": transaction["receipt"]},
 		pluck="name",
 	)
 	return len(callbacks) == 1
