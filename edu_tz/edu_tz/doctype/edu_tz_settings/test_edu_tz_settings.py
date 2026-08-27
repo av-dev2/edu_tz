@@ -1,9 +1,13 @@
 # Copyright (c) 2021, Aakvatech and Contributors
 # See license.txt
 
-# import frappe
-import unittest
+import frappe
+from frappe.tests.utils import FrappeTestCase
+
+# Company records come from ERPNext's test setup, not from this app.
+test_ignore = ["Company"]
 
 
-class TestEduTzSettings(unittest.TestCase):
-	pass
+class TestEduTzSettings(FrappeTestCase):
+	def test_partial_payment_defaults_off(self):
+		self.assertFalse(frappe.db.get_single_value("Edu Tz Settings", "partial_payment"))

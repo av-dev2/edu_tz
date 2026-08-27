@@ -220,7 +220,8 @@ def get_fee_details(filters):
 
 	conditions = get_filter_condtions(filters)
 
-	fee_details = frappe.db.sql(
+	# conditions only add %(name)s placeholders, values are bound via filters
+	fee_details = frappe.db.sql(  # nosemgrep
 		f"""
 		SELECT fe.due_date, fe.student, fe.student_name, fe.program,
 			fe.grand_total, fe.outstanding_amount, p_en.student_category,
@@ -275,7 +276,8 @@ def get_summary_based_on_month(filters):
 			conditions += " AND fe.academic_year = %(academic_year)s "
 			conditions += " AND p_en.academic_year = %(academic_year)s "
 
-		fee_details = frappe.db.sql(
+		# conditions only add %(name)s placeholders, values are bound via filters
+		fee_details = frappe.db.sql(  # nosemgrep
 			f"""
 			SELECT YEAR(fe.due_date) as year, MONTHNAME(fe.due_date) AS month, fe.program, SUM(fe.grand_total) AS grand_total,
 				SUM(fe.outstanding_amount) AS outstanding_amount
