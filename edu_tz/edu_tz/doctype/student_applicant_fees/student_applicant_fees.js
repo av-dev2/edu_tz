@@ -79,7 +79,7 @@ frappe.ui.form.on('Student Applicant Fees', {
 		frm.refresh();
 	},
 
-	academic_term: function() {
-		frappe.ui.form.trigger("Fees", "program");
+	academic_term: function(frm) {
+		frm.trigger("student");
 	},
 });
