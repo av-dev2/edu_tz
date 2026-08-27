@@ -67,6 +67,11 @@ class TestStudentApplicantFees(IntegrationTestCase):
 		with self.assertRaises(frappe.ValidationError):
 			self.make_fees().insert(ignore_permissions=True, ignore_mandatory=True)
 
+	def test_the_desk_can_route_to_the_doctype(self):
+		"""A domain restriction keeps the DocType out of can_read, and the desk route 404s."""
+		self.assertFalse(frappe.db.get_value("DocType", "Student Applicant Fees", "restrict_to_domain"))
+		self.assertIn("Student Applicant Fees", frappe.permissions.get_doctypes_with_read())
+
 	def test_submit_skips_bank_when_disabled(self):
 		frappe.db.set_value("Company", self.company, "send_fee_details_to_bank", 0)
 		doc = self.make_fees()
