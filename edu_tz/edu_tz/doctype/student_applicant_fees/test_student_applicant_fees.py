@@ -4,10 +4,10 @@
 from unittest.mock import patch
 
 import frappe
-from frappe.tests.utils import FrappeTestCase
+from frappe.tests import IntegrationTestCase
 
 # The tests use the site's Company and ignore mandatory links, so skip ERPNext/education test records.
-test_ignore = [
+IGNORE_TEST_RECORD_DEPENDENCIES = [
 	"Academic Term",
 	"Academic Year",
 	"Account",
@@ -25,7 +25,7 @@ test_ignore = [
 ]
 
 
-class TestStudentApplicantFees(FrappeTestCase):
+class TestStudentApplicantFees(IntegrationTestCase):
 	"""after_insert stamps the bank fields only when the company sends fee details to NMB."""
 
 	def setUp(self):
